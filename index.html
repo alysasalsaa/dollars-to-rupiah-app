@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dollars to Rupiah</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #0a0f1e;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #f8fafc;
+      padding: 32px 16px;
+      gap: 20px;
+    }
+
+    /* ── Header ── */
+    .header { text-align: center; }
+
+    .badge {
+      display: inline-block;
+      background: #15803d;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 12px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #f8fafc;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* ── Rate bar ── */
+    .rate-bar {
+      width: 100%;
+      max-width: 480px;
+      background: #14532d;
+      border: 1px solid #166534;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      color: #86efac;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .rate-bar span { font-weight: 600; }
+
+    .rate-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #86efac;
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Card ── */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 18px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #22c55e;
+    }
+
+    /* ── Input ── */
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrap:focus-within { border-color: #22c55e; }
+    .input-wrap.error        { border-color: #ef4444; }
+
+    .input-prefix {
+      padding: 0 14px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #22c55e;
+      background: #1e293b;
+      border-right: 1.5px solid #334155;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+
+    .input-wrap input {
+      flex: 1;
+      padding: 12px 14px;
+      background: transparent;
+      border: none;
+      color: #f8fafc;
+      font-size: 1.4rem;
+      font-family: 'Courier New', monospace;
+      outline: none;
+      letter-spacing: 0.05em;
+    }
+
+    .input-wrap input::placeholder { color: #334155; }
+
+    .error-msg {
+      font-size: 0.78rem;
+      color: #ef4444;
+      min-height: 1.1rem;
+    }
+
+    /* ── Convert button ── */
+    .btn-convert {
+      padding: 11px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 16px rgba(34,197,94,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-convert:hover  { transform: scale(1.02); }
+    .btn-convert:active { transform: scale(0.97); }
+    .btn-convert:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    hr { border: none; border-top: 1px solid #334155; }
+
+    /* ── Result total ── */
+    .result-total {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .result-row .rl { font-size: 0.78rem; color: #94a3b8; }
+    .result-row .rv {
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: #22c55e;
+    }
+
+    /* ── Denomination breakdown ── */
+    .denom-section {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .denom-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .denom-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #0f172a;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+    }
+
+    .denom-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      border: 2px solid;
+    }
+
+    .denom-name {
+      flex: 1;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+
+    .denom-count {
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: #f8fafc;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .denom-row.zero .denom-count { color: #334155; }
+    .denom-row.zero .denom-name  { color: #334155; }
+
+    .total-coins {
+      font-size: 0.78rem;
+      color: #64748b;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="badge">Tier 1 — Beginner</span>
+    <h1>💵 → 🇮🇩 Rupiah</h1>
+    <p class="subtitle">Real-time USD to IDR converter with denomination breakdown</p>
+  </div>
+
+  <!-- Rate bar -->
+  <div class="rate-bar">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="rate-dot"></div>
+      <span id="rateText">Fetching live rate…</span>
+    </div>
+    <span id="rateTime" style="font-size:0.72rem;color:#4ade80;opacity:0.7;"></span>
+  </div>
+
+  <!-- Main card -->
+  <div class="card">
+    <div class="section-title">Enter Amount</div>
+
+    <div class="input-wrap" id="inputWrap">
+      <div class="input-prefix">$</div>
+      <input
+        type="number"
+        id="dollarInput"
+        placeholder="0.00"
+        min="0"
+        step="0.01"
+        oninput="onInput()"
+      />
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <button class="btn-convert" id="convertBtn" onclick="convert()" disabled>
+      Convert to Rupiah
+    </button>
+
+    <hr>
+
+    <!-- Total result -->
+    <div class="result-total" id="resultTotal">
+      <div class="section-title">Result</div>
+      <div class="result-row">
+        <span class="rl">USD entered</span>
+        <span class="rv" id="resUsd">—</span>
+      </div>
+      <div class="result-row">
+        <span class="rl">Exchange rate</span>
+        <span class="rv" id="resRate">—</span>
+      </div>
+      <div class="result-row">
+        <span class="rl">Total IDR</span>
+        <span class="rv" id="resIdr" style="font-size:1.35rem;color:#4ade80;">—</span>
+      </div>
+    </div>
+
+    <hr id="denomHr" style="display:none;">
+
+    <!-- Denomination breakdown -->
+    <div class="denom-section" id="denomSection">
+      <div class="section-title">Denomination Breakdown</div>
+      <div class="denom-grid" id="denomGrid"></div>
+      <div class="total-coins" id="totalPieces"></div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── Denominations (largest → smallest) ── */
+    const DENOMS = [
+      { value: 100000, label: 'Rp100.000', color: '#ef4444', border: '#fca5a5', type: 'note' },
+      { value:  50000, label: 'Rp50.000',  color: '#3b82f6', border: '#93c5fd', type: 'note' },
+      { value:  20000, label: 'Rp20.000',  color: '#22c55e', border: '#86efac', type: 'note' },
+      { value:  10000, label: 'Rp10.000',  color: '#a855f7', border: '#d8b4fe', type: 'note' },
+      { value:   5000, label: 'Rp5.000',   color: '#f59e0b', border: '#fcd34d', type: 'note' },
+      { value:   2000, label: 'Rp2.000',   color: '#06b6d4', border: '#67e8f9', type: 'note' },
+      { value:   1000, label: 'Rp1.000',   color: '#84cc16', border: '#bef264', type: 'note' },
+      { value:    500, label: 'Rp500',      color: '#f97316', border: '#fdba74', type: 'coin' },
+      { value:    200, label: 'Rp200',      color: '#64748b', border: '#94a3b8', type: 'coin' },
+      { value:    100, label: 'Rp100',      color: '#78716c', border: '#a8a29e', type: 'coin' },
+    ];
+
+    /* ── State ── */
+    let liveRate = null;
+    let rateUpdatedAt = null;
+
+    /* ── Fetch live rate ── */
+    async function fetchRate() {
+      try {
+        const res  = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await res.json();
+        liveRate = data.rates.IDR;
+        rateUpdatedAt = new Date();
+        document.getElementById('rateText').textContent =
+          `1 USD = Rp${formatIDR(Math.round(liveRate))}`;
+        document.getElementById('rateTime').textContent =
+          'Updated ' + rateUpdatedAt.toLocaleTimeString();
+        document.getElementById('convertBtn').disabled = false;
+      } catch(_) {
+        document.getElementById('rateText').textContent =
+          'Rate unavailable — using fallback (Rp16.000)';
+        liveRate = 16000;
+        document.getElementById('convertBtn').disabled = false;
+      }
+    }
+
+    /* ── Format helpers ── */
+    function formatIDR(n) {
+      return n.toLocaleString('id-ID');
+    }
+
+    /* ── Input handler ── */
+    function onInput() {
+      const val = document.getElementById('dollarInput').value;
+      document.getElementById('inputWrap').classList.remove('error');
+      document.getElementById('errorMsg').textContent = '';
+      // hide results on new input
+      document.getElementById('resultTotal').style.display  = 'none';
+      document.getElementById('denomSection').style.display = 'none';
+      document.getElementById('denomHr').style.display      = 'none';
+    }
+
+    /* ── Convert ── */
+    function convert() {
+      const raw = document.getElementById('dollarInput').value.trim();
+      const wrap = document.getElementById('inputWrap');
+      const err  = document.getElementById('errorMsg');
+
+      wrap.classList.remove('error');
+      err.textContent = '';
+
+      if (raw === '' || isNaN(parseFloat(raw))) {
+        wrap.classList.add('error');
+        err.textContent = '⚠ Please enter a valid dollar amount.';
+        return;
+      }
+
+      const usd = parseFloat(raw);
+      if (usd < 0) {
+        wrap.classList.add('error');
+        err.textContent = '⚠ Amount cannot be negative.';
+        return;
+      }
+
+      const totalIDR = Math.round(usd * liveRate);
+
+      /* ── Show totals ── */
+      document.getElementById('resUsd').textContent  = `$${usd.toFixed(2)}`;
+      document.getElementById('resRate').textContent =
+        `1 USD = Rp${formatIDR(Math.round(liveRate))}`;
+      document.getElementById('resIdr').textContent  = `Rp${formatIDR(totalIDR)}`;
+      document.getElementById('resultTotal').style.display = 'flex';
+
+      /* ── Denomination breakdown ── */
+      let remaining = totalIDR;
+      let totalPieces = 0;
+      const grid = document.getElementById('denomGrid');
+      grid.innerHTML = '';
+
+      DENOMS.forEach(d => {
+        const count = Math.floor(remaining / d.value);
+        remaining  -= count * d.value;
+        totalPieces += count;
+
+        const row = document.createElement('div');
+        row.className = 'denom-row' + (count === 0 ? ' zero' : '');
+
+        const icon = document.createElement('div');
+        icon.className = 'denom-icon';
+        icon.style.background   = count > 0 ? d.color + '22' : 'transparent';
+        icon.style.borderColor  = count > 0 ? d.border : '#1e293b';
+        icon.style.color        = count > 0 ? d.border : '#334155';
+        icon.textContent        = d.type === 'coin' ? '🪙' : '💵';
+
+        const name  = document.createElement('div');
+        name.className   = 'denom-name';
+        name.textContent = d.label;
+
+        const cnt  = document.createElement('div');
+        cnt.className   = 'denom-count';
+        cnt.textContent = count > 0 ? `×${count}` : '—';
+
+        row.appendChild(icon);
+        row.appendChild(name);
+        row.appendChild(cnt);
+        grid.appendChild(row);
+      });
+
+      document.getElementById('totalPieces').textContent =
+        `Total pieces: ${totalPieces.toLocaleString()}`;
+
+      document.getElementById('denomSection').style.display = 'flex';
+      document.getElementById('denomHr').style.display      = 'block';
+    }
+
+    /* ── Enter key ── */
+    document.getElementById('dollarInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') convert();
+    });
+
+    /* ── Init ── */
+    fetchRate();
+    // refresh rate every 5 minutes
+    setInterval(fetchRate, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
